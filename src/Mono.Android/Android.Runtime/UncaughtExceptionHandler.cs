@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Reflection;
 
@@ -5,9 +7,9 @@ namespace Android.Runtime {
 
 	sealed class UncaughtExceptionHandler : Java.Lang.Object, Java.Lang.Thread.IUncaughtExceptionHandler {
 
-		Action<Exception> mono_unhandled_exception;
+		Action<Exception>? mono_unhandled_exception;
 
-		Action<AppDomain, UnhandledExceptionEventArgs>      AppDomain_DoUnhandledException;
+		Action<AppDomain, UnhandledExceptionEventArgs>?      AppDomain_DoUnhandledException;
 
 		Java.Lang.Thread.IUncaughtExceptionHandler defaultHandler;
 
@@ -28,11 +30,11 @@ namespace Android.Runtime {
 				Android.Runtime.AndroidEnvironment.FailFast ($"Unable to initialize UncaughtExceptionHandler. Nested exception caught: {e}");
 			}
 
-			mono_unhandled_exception (ex);
+			mono_unhandled_exception! (ex);
 			if (AppDomain_DoUnhandledException != null) {
 				try {
 					var jltp = ex as JavaProxyThrowable;
-					Exception innerException = jltp?.InnerException;
+					Exception? innerException = jltp?.InnerException;
 					var args  = new UnhandledExceptionEventArgs (innerException ?? ex, isTerminating: true);
 					AppDomain_DoUnhandledException (AppDomain.CurrentDomain, args);
 				}

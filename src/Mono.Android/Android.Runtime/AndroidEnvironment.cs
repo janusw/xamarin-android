@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Net;
 using System.Collections.Generic;
@@ -21,8 +23,8 @@ namespace Android.Runtime {
 
 		public const string AndroidLogAppName = "Mono.Android";
 
-		static IX509TrustManager sslTrustManager;
-		static KeyStore certStore;
+		static IX509TrustManager? sslTrustManager;
+		static KeyStore? certStore;
 		static object lock_ = new object ();
 
 		static IntPtr java_lang_Object_toString;
@@ -33,9 +35,9 @@ namespace Android.Runtime {
 				return;
 
 			lock (lock_) {
-				TrustManagerFactory factory = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
-				factory.Init ((KeyStore) null);
-				foreach (ITrustManager tm in factory.GetTrustManagers ()) {
+				TrustManagerFactory factory = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm)!;
+				factory.Init ((KeyStore?) null);
+				foreach (ITrustManager tm in factory.GetTrustManagers ()!) {
 					try {
 						sslTrustManager = tm.JavaCast<IX509TrustManager>();
 					}
@@ -55,7 +57,7 @@ namespace Android.Runtime {
 
 			lock (lock_) {
 				try {
-					certStore = KeyStore.GetInstance ("AndroidCAStore");
+					certStore = KeyStore.GetInstance ("AndroidCAStore")!;
 					certStore.Load (null);
 				} catch {
 					// ignore
@@ -67,7 +69,7 @@ namespace Android.Runtime {
 		[DllImport ("libc")]
 		static extern void exit (int status);
 
-		public static void FailFast (string message)
+		public static void FailFast (string? message)
 		{
 			Logger.Log (LogLevel.Fatal, AndroidLogAppName, message);
 			exit (-1);
@@ -97,7 +99,7 @@ namespace Android.Runtime {
 		}
 #endif  // !JAVA_INTEROP
 
-		public static event EventHandler<RaiseThrowableEventArgs> UnhandledExceptionRaiser;
+		public static event EventHandler<RaiseThrowableEventArgs>? UnhandledExceptionRaiser;
 
 		public static void RaiseThrowable (Java.Lang.Throwable throwable)
 		{
@@ -108,7 +110,7 @@ namespace Android.Runtime {
 
 		static IEnumerable<EventHandler<RaiseThrowableEventArgs>> GetUnhandledExceptionRaiserInvocationList ()
 		{
-			EventHandler<RaiseThrowableEventArgs> h = UnhandledExceptionRaiser;
+			EventHandler<RaiseThrowableEventArgs>? h = UnhandledExceptionRaiser;
 			if (h == null)
 				return new EventHandler<RaiseThrowableEventArgs>[0];
 			return h.GetInvocationList ().Cast<EventHandler<RaiseThrowableEventArgs>> ();
@@ -194,7 +196,7 @@ namespace Android.Runtime {
 		//     System.Mono.Btls.MonoBtlsX509LookupMono.OnGetBySubject(). All exceptions are caught and handled
 		//     by the caller.
 		//
-		static byte[] CertStoreLookup (long hash, bool userStore)
+		static byte[]? CertStoreLookup (long hash, bool userStore)
 		{
 			SetupCertStore ();
 
@@ -211,7 +213,7 @@ namespace Android.Runtime {
 
 		static Java.Security.Cert.CertificateFactory GetX509CertificateFactory ()
 		{
-			return Java.Security.Cert.CertificateFactory.GetInstance ("X.509");
+			return Java.Security.Cert.CertificateFactory.GetInstance ("X.509")!;
 		}
 
 		static Java.Security.Cert.X509Certificate ConvertCertificate (Java.Security.Cert.CertificateFactory factory, byte[] certificateData)
@@ -254,7 +256,7 @@ namespace Android.Runtime {
 			var wm = Application.Context.GetSystemService (Context.WindowService).JavaCast <IWindowManager> ();
 			var metrics = new DisplayMetrics ();
 #if ANDROID_17
-			wm.DefaultDisplay.GetRealMetrics (metrics);
+			wm.DefaultDisplay?.GetRealMetrics (metrics);
 #else
 			wm.DefaultDisplay.GetMetrics (metrics);
 #endif
@@ -291,7 +293,7 @@ namespace Android.Runtime {
 		// This is invoked by
 		// mscorlib.dll!System.AndroidPlatform.GetDefaultSyncContext()
 		// DO NOT REMOVE
-		static SynchronizationContext GetDefaultSyncContext ()
+		static SynchronizationContext? GetDefaultSyncContext ()
 		{
 			var looper = Android.OS.Looper.MainLooper;
 			try {
@@ -355,10 +357,10 @@ namespace Android.Runtime {
 		// This is invoked by
 		// System.Net.Http.dll!System.Net.Http.HttpClient.cctor
 		// DO NOT REMOVE
-		static object GetHttpMessageHandler ()
+		static object? GetHttpMessageHandler ()
 		{
-			string envvar = Environment.GetEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE")?.Trim ();
-			Type handlerType = null;
+			var envvar = Environment.GetEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE")?.Trim ();
+			Type? handlerType = null;
 			if (!String.IsNullOrEmpty (envvar))
 				handlerType = Type.GetType (envvar, false);
 			else
@@ -370,7 +372,7 @@ namespace Android.Runtime {
 		}
 
 		class _Proxy : IWebProxy {
-			readonly ProxySelector selector = ProxySelector.Default;
+			readonly ProxySelector selector = ProxySelector.Default!;
 
 			// Exception audit:
 			//
@@ -393,7 +395,7 @@ namespace Android.Runtime {
 			{
 				IList<Java.Net.Proxy> list;
 				using (var uri = CreateJavaUri (destination))
-					list = selector.Select (uri);
+					list = selector.Select (uri)!;
 				if (list.Count < 1)
 					return destination;
 
@@ -416,7 +418,7 @@ namespace Android.Runtime {
 			{
 				IList<Java.Net.Proxy> list;
 				using (var uri = CreateJavaUri (host))
-					list = selector.Select (uri);
+					list = selector.Select (uri)!;
 
 				if (list.Count < 1)
 					return true;
@@ -424,7 +426,7 @@ namespace Android.Runtime {
 				return list [0].Equals (Proxy.NoProxy);
 			}
 
-			public ICredentials Credentials {
+			public ICredentials? Credentials {
 				get;
 				set;
 			}
